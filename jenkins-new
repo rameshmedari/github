@@ -1,5 +1,10 @@
 pipeline {
     agent any 
+    parameters {
+        AWS_ACCESS_KEY_ID = ('AKIASI56IEMAIHP4D2U6')
+        AWS_SECRET_ACCESS_KEY = ('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')
+
+    }
 
     stages {
         stage ('git clone') {
@@ -7,5 +12,10 @@ pipeline {
                 git credentialsId: 'ramesh', url: 'https://github.com/rameshmedari/github'
                 }
             }
+        stage ('terraform init') {
+            steps {
+                sh "terraform init -input=false"
+            }
+        }
         }
     }

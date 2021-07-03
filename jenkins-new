@@ -1,9 +1,16 @@
 pipeline {
     agent any 
     parameters {
-        AWS_ACCESS_KEY_ID = ('AKIASI56IEMAIHP4D2U6')
-        AWS_SECRET_ACCESS_KEY = ('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')
-
+        choice(name: 'dev', defaultValue: 'default', description: 'Workspace/environment file to use for deployment')
+        choice(name: 'version', defaultValue: '', description: 'Version variable to pass to Terraform')
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan')
+        choice{(name: "AWS_REGION", choices: ["us-east-2", "us-west-2"], description: "AWS region to deploy the resources")
+    }
+     environment {
+         DEPLOYMENT_ROLE='jenkins deployment role'
+        AWS_ACCESS_KEY_ID     = credentials('AKIASI56IEMAOPQDJABR')
+        AWS_SECRET_ACCESS_KEY = credentials('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')
+        TF_IN_AUTOMATION      = '1'
     }
 
     stages {
@@ -17,5 +24,20 @@ pipeline {
                 sh "terraform init -input=false"
             }
         }
+        steps {
+                script {
+                    def plan = readFile 'tfplan.txt'
+                    input message: "Do you want to apply the plan?",
+                        parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
+                }
+            }
+            
+        stage('Apply') {
+            steps {
+                sh "terraform apply -input=false tfplan"
+            }
+        }
+
         }
     }
+    
